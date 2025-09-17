@@ -168,7 +168,7 @@ defineProps({
 })
 
 const isAdmin = computed(() => {
-  return pageProps?.auth?.user?.roles?.includes('admin')
+  return pageProps?.props?.auth?.user?.roles?.includes('admin')
 })
 
 const logout = () => {

@@ -41,7 +41,6 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
             'birthday' => 'sometimes|date',
             'gender' => 'sometimes|in:male,female,other',
             'address' => 'sometimes|string',
@@ -68,7 +67,7 @@ class ProfileController extends Controller
             ], 404);
         }
 
-        $profile->update($request->only(['name', 'birthday', 'gender', 'address']));
+        $profile->update($request->only(['birthday', 'gender', 'address']));
 
         return response()->json([
             'success' => true,

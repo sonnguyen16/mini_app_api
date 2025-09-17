@@ -21,20 +21,18 @@ use App\Http\Controllers\Api\PolicyController;
 
 Route::prefix('v1')->group(function () {
     // Auth routes
-    Route::post('/auth/login', [AuthController::class, 'login']);
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    
+    Route::post('/auth/login', [AuthController::class, 'login']); // Đăng nhập qua Zalo
+    Route::post('/auth/login-password', [AuthController::class, 'loginWithPassword']); // Đăng nhập truyền thống
+
     // Protected routes với app scope
     Route::middleware(['auth:sanctum', 'app.scope'])->group(function () {
-        Route::post('/auth/logout', [AuthController::class, 'logout']);
-        
         // Profile
         Route::get('/me', [ProfileController::class, 'me']);
         Route::put('/me', [ProfileController::class, 'update']);
-        
+
         // Categories
         Route::get('/categories', [CategoryController::class, 'index']);
-        
+
         // Vouchers
         Route::get('/vouchers', [VoucherController::class, 'index']);
         Route::get('/vouchers/latest', [VoucherController::class, 'latest']);
@@ -42,7 +40,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/wallet/{code}/use', [VoucherController::class, 'use']);
         Route::get('/wallet', [VoucherController::class, 'wallet']);
         Route::get('/history', [VoucherController::class, 'history']);
-        
+
         // Policies
         Route::get('/policies/membership', [PolicyController::class, 'membership']);
         Route::get('/policies/privacy', [PolicyController::class, 'privacy']);

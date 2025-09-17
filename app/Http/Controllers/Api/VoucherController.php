@@ -25,6 +25,7 @@ class VoucherController extends Controller
         $pointsLt = $request->query('points_lt');
         $pointsGte = $request->query('points_gte');
         $sort = $request->query('sort', 'latest');
+        $perPage = $request->query('per_page', 20);
 
         $vouchers = Voucher::forApp($appId)
                           ->active()
@@ -35,7 +36,9 @@ class VoucherController extends Controller
                               return $query->where('category_id', $categoryId);
                           })
                           ->when($keyword, function ($query, $keyword) {
-                              return $query->where('name', 'like', "%{$keyword}%");
+                              return $query->where('name', 'like', "%{$keyword}%")
+                              ->orWhere('description', 'like', "%{$keyword}%")
+                              ->orWhere('detail', 'like', "%{$keyword}%");
                           })
                           ->when($pointsLt, function ($query, $pointsLt) {
                               return $query->where('required_points', '<', $pointsLt);
@@ -58,7 +61,7 @@ class VoucherController extends Controller
                 $vouchers->orderByDesc('created_at');
         }
 
-        $vouchers = $vouchers->paginate(20);
+        $vouchers = $vouchers->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -72,6 +75,7 @@ class VoucherController extends Controller
     public function latest(Request $request)
     {
         $appId = $request->app_id;
+        $limit = $request->query('limit', 20);
 
         $vouchers = Voucher::forApp($appId)
                           ->active()
@@ -79,7 +83,7 @@ class VoucherController extends Controller
                           ->available()
                           ->with(['category', 'app'])
                           ->orderByDesc('created_at')
-                          ->limit(20)
+                          ->limit($limit)
                           ->get();
 
         return response()->json([
@@ -250,12 +254,21 @@ class VoucherController extends Controller
     {
         $user = $request->user();
         $appId = $request->app_id;
+        $perPage = $request->query('per_page', 20);
+        $status = $request->query('status');
+        $keyword = $request->query('keyword', '');
 
         $walletEntries = VoucherUserWallet::where('user_id', $user->id)
                                          ->where('app_id', $appId)
-                                         ->with(['voucher', 'app'])
+                                         ->where('status', $status)
+                                         ->whereHas('voucher', function ($query) use ($keyword) {
+                                             $query->where('name', 'like', "%{$keyword}%")
+                                                   ->orWhere('description', 'like', "%{$keyword}%")
+                                                   ->orWhere('detail', 'like', "%{$keyword}%");
+                                         })
+                                         ->with(['voucher.category', 'app'])
                                          ->orderByDesc('created_at')
-                                         ->paginate(20);
+                                         ->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -270,12 +283,26 @@ class VoucherController extends Controller
     {
         $user = $request->user();
         $appId = $request->app_id;
+        $perPage = $request->query('per_page', 20);
+        $type = $request->query('type');
+        $keyword = $request->query('keyword', '');
 
-        $transactions = Transaction::where('user_id', $user->id)
-                                  ->where('app_id', $appId)
-                                  ->with(['voucher', 'app'])
-                                  ->orderByDesc('created_at')
-                                  ->paginate(20);
+        $transactions = Transaction::forApp($appId)
+                                  ->where('user_id', $user->id)
+                                  ->whereHas('voucher', function ($query) use ($keyword) {
+                                      $query->where('name', 'like', "%{$keyword}%")
+                                            ->orWhere('description', 'like', "%{$keyword}%")
+                                            ->orWhere('detail', 'like', "%{$keyword}%");
+                                  });
+
+        if ($type) {
+            $transactions->where('type', $type);
+        }
+
+        $transactions = $transactions->with(['voucher', 'app'])
+                                     ->orderByDesc('created_at')
+                                     ->paginate($perPage);
+
 
         return response()->json([
             'success' => true,

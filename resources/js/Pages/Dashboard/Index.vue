@@ -93,7 +93,7 @@
                 <tbody>
                   <tr v-for="transaction in recentTransactions" :key="transaction.id">
                     <td>{{ formatDate(transaction.created_at) }}</td>
-                    <td>{{ transaction.user?.email || 'N/A' }}</td>
+                    <td>{{ transaction.user?.phone || 'N/A' }}</td>
                     <td>{{ transaction.voucher?.name || 'N/A' }}</td>
                     <td>
                       <span class="badge" :class="transaction.type === 'redeem' ? 'badge-primary' : 'badge-info'">
